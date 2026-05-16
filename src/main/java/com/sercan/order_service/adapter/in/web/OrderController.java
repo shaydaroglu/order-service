@@ -50,9 +50,9 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OrderResponse> getOrder(@PathVariable UUID orderId) {
-        log.info("GET /api/v1/customer-orders orderId={}", orderId);
-        return ResponseEntity.ok(OrderResponse.from(orderUseCase.getOrder(orderId)));
+    public ResponseEntity<OrderResponse> getOrder(@PathVariable UUID id) {
+        log.info("GET /api/v1/customer-orders orderId={}", id);
+        return ResponseEntity.ok(OrderResponse.from(orderUseCase.getOrder(id)));
     }
 
     @GetMapping

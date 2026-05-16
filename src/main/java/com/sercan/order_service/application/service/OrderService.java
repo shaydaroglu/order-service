@@ -7,18 +7,19 @@ import com.sercan.order_service.application.port.in.OrderUseCase;
 import com.sercan.order_service.application.port.out.CatalogValidationPort;
 import com.sercan.order_service.application.port.out.OrderRepository;
 import com.sercan.order_service.domain.*;
+import com.sercan.order_service.domain.exception.IdempotencyConflictException;
+import com.sercan.order_service.domain.exception.IdempotencyReplayException;
 import com.sercan.order_service.domain.exception.OrderNotFoundException;
-import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,10 +34,7 @@ public class OrderService implements OrderUseCase {
     public Order createOrder(CreateOrderRequest request, String idempotencyKey) {
         log.info("Creating order category={}, idempotencyKey={}",request.category(), idempotencyKey);
 
-        if (StringUtils.isNotBlank(idempotencyKey)) {
-            //TODO
-        }
-
+        checkIdempotency(idempotencyKey, request);
         List<UUID> productOfferingsIds = request.orderItems().stream()
                 .map(OrderItemDto::productOfferingId)
                 .toList();
@@ -55,7 +53,7 @@ public class OrderService implements OrderUseCase {
                 .toList();
 
         Order order = new Order(
-                UUID.randomUUID(),
+                null,
                 OrderState.DRAFT,
                 request.category(),
                 request.customer().id(),
@@ -67,9 +65,15 @@ public class OrderService implements OrderUseCase {
                 null
         );
 
-        Order saved = orderRepository.save(order);
-        log.info("Order created id={}", saved.id());
-        return saved;
+        try {
+            Order saved = orderRepository.save(order);
+            log.info("Order created id={}", saved.id());
+            return saved;
+        } catch (DataIntegrityViolationException ex) {
+            log.warn("Concurrent idempotency key conflict for key={}", idempotencyKey);
+            return orderRepository.findByIdempotencyKey(idempotencyKey)
+                    .orElseThrow(() -> new IdempotencyConflictException(idempotencyKey));
+        }
     }
 
     @Override
@@ -137,6 +141,36 @@ public class OrderService implements OrderUseCase {
         }
     }
 
+    private void checkIdempotency(String idempotencyKey, CreateOrderRequest request) {
+        if (StringUtils.isBlank(idempotencyKey)) return;
 
+        orderRepository.findByIdempotencyKey(idempotencyKey).ifPresent(existing -> {
+            if (!isPayloadIdentical(existing, request)) {
+                log.warn("Idempotency conflict for key={}", idempotencyKey);
+                throw new IdempotencyConflictException(idempotencyKey);
+            }
+            log.info("Replaying existing order for idempotencyKey={}", idempotencyKey);
+            throw new IdempotencyReplayException(existing);
+        });
+    }
 
+    private boolean isPayloadIdentical(Order existing, CreateOrderRequest request) {
+        if (existing.category() != request.category()) return false;
+        if (!Objects.equals(existing.customerId(), request.customer().id())) return false;
+        if (!Objects.equals(existing.siteId(), request.site().id())) return false;
+        if (existing.paymentMethod().type() != request.paymentMethod().type()) return false;
+        if (!Objects.equals(existing.paymentMethod().iban(), request.paymentMethod().iban())) return false;
+
+        if (existing.orderItems().size() != request.orderItems().size()) return false;
+
+        Map<UUID, Integer> existingItems = existing.orderItems().stream()
+                .collect(Collectors.toMap(
+                        OrderItem::productOfferingId,
+                        OrderItem::quantity
+                ));
+
+        return request.orderItems().stream().allMatch(dto ->
+                Objects.equals(existingItems.get(dto.productOfferingId()), dto.quantity())
+        );
+    }
 }

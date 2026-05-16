@@ -41,7 +41,6 @@ public class OrderMapper {
 
     public OrderEntity toEntity(Order domain) {
         OrderEntity entity = OrderEntity.builder()
-                .id(domain.id())
                 .state(domain.state())
                 .category(domain.category())
                 .customerId(domain.customerId())

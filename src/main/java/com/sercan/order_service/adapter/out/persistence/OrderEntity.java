@@ -30,6 +30,7 @@ public class OrderEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Setter
     private OrderState state;
 
     @Enumerated(EnumType.STRING)
@@ -46,15 +47,20 @@ public class OrderEntity {
     @Builder.Default
     private List<OrderItemEntity> orderItems = new ArrayList<>();
 
+    @Setter
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PaymentMethod.PaymentType paymentType;
 
     @Column
+    @Setter
     private String iban;
 
     @Column(unique = true)
     private String idempotencyKey;
+
+    @Version
+    private Long version;
 
     @CreationTimestamp
     @Column(nullable = false)
