@@ -6,7 +6,7 @@ import java.util.UUID;
 
 public record Order(
         UUID id,
-        OrderStatus state,
+        OrderState state,
         Category category,
         String customerId,
         String siteId,
@@ -16,5 +16,4 @@ public record Order(
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt
 ) {
-
 }
