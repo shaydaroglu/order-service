@@ -33,7 +33,7 @@ public class OrderService implements OrderUseCase {
     public Order createOrder(CreateOrderRequest request, String idempotencyKey) {
         log.info("Creating order category={}, idempotencyKey={}",request.category(), idempotencyKey);
 
-        if(StringUtils.isNotBlank(idempotencyKey)) {
+        if (StringUtils.isNotBlank(idempotencyKey)) {
             //TODO
         }
 
@@ -82,9 +82,9 @@ public class OrderService implements OrderUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Order> listOrders(Pageable pageable) {
+    public Page<Order> listOrders(Category category, Pageable pageable) {
         log.info("Listing orders. page={}, size={}", pageable.getPageNumber(), pageable.getPageSize());
-        return orderRepository.findAll(pageable);
+        return orderRepository.findAll(category, pageable);
     }
 
     @Override

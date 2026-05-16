@@ -12,5 +12,5 @@ public interface OrderRepository {
     Order save(Order order);
     Optional<Order> findById(UUID id);
     Optional<Order> findByIdempotencyKey(String idempotencyKey);
-    Page<Order> findAll(Pageable pageable);
+    Page<Order> findAll(Category category, Pageable pageable);
 }
