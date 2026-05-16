@@ -13,3 +13,7 @@ spring:
 logging:
   level:
     com.sercan.catalog: DEBUG
+
+catalog:
+  service:
+    url: http://localhost:8081/

@@ -10,3 +10,7 @@ spring:
 logging:
   level:
     com.sercan.catalog: INFO
+
+catalog:
+  service:
+    url: ${CATALOG_SERVICE_URL}
