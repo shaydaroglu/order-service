@@ -6,6 +6,7 @@ COPY pom.xml .
 COPY .mvn .mvn
 COPY mvnw .
 
+RUN sed -i 's/\r$//' mvnw && chmod +x mvnw
 RUN ./mvnw -B dependency:go-offline
 
 COPY src ./src
