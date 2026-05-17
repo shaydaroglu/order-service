@@ -195,7 +195,7 @@ public class OrderControllerIT {
         }
 
         @Test
-        @DisplayName("should return 200 with X-Idempotency-Replayed header on replay")
+        @DisplayName("should return 200 with Idempotency-Replayed header on replay")
         void shouldReturn200OnIdempotencyReplay() throws Exception {
             String idempotencyKey = UUID.randomUUID().toString();
 
@@ -210,7 +210,7 @@ public class OrderControllerIT {
                             .header("Idempotency-Key", idempotencyKey)
                             .content(objectMapper.writeValueAsString(validRequest)))
                     .andExpect(status().isOk())
-                    .andExpect(header().string("X-Idempotency-Replayed", "true"));
+                    .andExpect(header().string("Idempotency-Replayed", "true"));
         }
 
         @Test
