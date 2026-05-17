@@ -151,13 +151,43 @@ A consistent error contract makes failures easier for clients to parse and easie
 
 - Java 21
 - Docker and Docker Compose
-- The catalog service must be started first so that the shared `services-network` Docker network exists
+- The catalog service repository must be checked out next to this repository because the services are designed to run together on the shared `services-network`
 
-### Start the service
+### Preferred workflow
+
+The recommended entry point is the `Makefile`. It wraps the multi-service Docker Compose commands and starts the catalog service before the order service, which ensures that the shared network and downstream dependency are available.
+
+Before running the command below, make sure the `catalog-service` repository is cloned next to `order-service`:
+
+```text
+parent-directory/
+├── catalog-service/
+└── order-service/
+```
+
+```bash
+make order-up
+```
+
+Useful Makefile targets:
+
+```text
+make help         Show all available commands
+make order-up     Start the catalog service, order service, and their databases
+make order-test   Run the order-service test suite in Docker
+make order-logs   Tail order-service logs
+make order-down   Stop the order service
+make up           Start both services
+make down         Stop both services
+```
+
+### Direct Docker Compose command
 
 ```bash
 docker compose up --build
 ```
+
+When using Docker Compose directly instead of the Makefile, start the catalog service first so it creates the shared `services-network`.
 
 The API will be available at:
 
@@ -169,6 +199,12 @@ Swagger UI:
 
 ```text
 http://localhost:8080/swagger-ui.html
+```
+
+OpenAPI specification:
+
+```text
+http://localhost:8080/api-docs
 ```
 
 ## Example API usage
@@ -201,27 +237,31 @@ curl -X POST http://localhost:8080/api/v1/customer-orders \
 curl -X PATCH http://localhost:8080/api/v1/customer-orders/{orderId} \
   -H "Content-Type: application/json" \
   -d '{
-    "status": "PREVIEW"
+    "state": "PREVIEW"
   }'
 ```
 
 ## Testing
 
-Run the full test suite locally with:
+Run the full test suite through the Makefile:
+
+```bash
+make order-test
+```
+
+This is the preferred test command because it runs inside Docker using Java 21 and does not depend on the Java version installed on the host machine.
+
+Run the same suite locally with:
 
 ```bash
 ./mvnw verify
 ```
 
-Or run it inside a Java 21 container:
-```bash
-docker run --rm \
--v "$PWD":/app \
--w /app \
-eclipse-temurin:21-jdk-alpine \
-./mvnw verify 
-```
+Or run it through the dedicated Docker Compose test service directly:
 
+```bash
+docker compose --profile test run --rm order-test
+```
 
 The tests cover:
 
@@ -239,6 +279,5 @@ If this service were extended further, I would consider:
 
 - adding authentication and authorization
 - introducing structured observability and metrics
-- publishing richer OpenAPI examples for all endpoints
 - adding Testcontainers-based integration tests against PostgreSQL
 - revisiting synchronous catalog validation with caching, retries, or asynchronous workflows where the surrounding system justified the added complexity
