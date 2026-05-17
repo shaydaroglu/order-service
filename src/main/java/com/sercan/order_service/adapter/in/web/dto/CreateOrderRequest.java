@@ -21,7 +21,7 @@ public record CreateOrderRequest(
         @Valid
         SiteDto site,
 
-        @NotEmpty(message = "Order items must not be empty")
+        @NotEmpty(message = "Order orderItems must not be empty")
         @Valid
         List<OrderItemDto> orderItems,
 

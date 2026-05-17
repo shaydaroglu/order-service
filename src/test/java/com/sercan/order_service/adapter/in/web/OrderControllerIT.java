@@ -107,7 +107,7 @@ public class OrderControllerIT {
         }
 
         @Test
-        @DisplayName("should return 400 when order items are empty")
+        @DisplayName("should return 400 when order orderItems are empty")
         void shouldReturn400WhenOrderItemsEmpty() throws Exception {
             CreateOrderRequest invalidRequest = new CreateOrderRequest(
                     Category.B2B,
@@ -122,6 +122,27 @@ public class OrderControllerIT {
                             .content(objectMapper.writeValueAsString(invalidRequest)))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.errors.fieldErrors.orderItems").isNotEmpty());
+        }
+
+        @Test
+        @DisplayName("should return 400 when create request has duplicate product offering ids")
+        void shouldReturn400WhenCreateHasDuplicateProductIds() throws Exception {
+            CreateOrderRequest invalidRequest = new CreateOrderRequest(
+                    Category.B2B,
+                    new CustomerDto("customer-1"),
+                    new SiteDto("site-1"),
+                    List.of(
+                            new OrderItemDto(productOfferingId1, 2),
+                            new OrderItemDto(productOfferingId1, 3)
+                    ),
+                    new PaymentMethodDto(PaymentMethod.PaymentType.INVOICE, null)
+            );
+
+            mockMvc.perform(post("/api/v1/customer-orders")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(invalidRequest)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.status").value(400));
         }
 
         @Test
@@ -265,7 +286,7 @@ public class OrderControllerIT {
 
             mockMvc.perform(get("/api/v1/customer-orders"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.items", hasSize(1)))
+                    .andExpect(jsonPath("$.orderItems", hasSize(1)))
                     .andExpect(jsonPath("$.totalElements").value(1))
                     .andExpect(jsonPath("$.page").value(0))
                     .andExpect(jsonPath("$.size").value(20));
@@ -295,8 +316,8 @@ public class OrderControllerIT {
             mockMvc.perform(get("/api/v1/customer-orders")
                             .param("category", "B2B"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.items", hasSize(1)))
-                    .andExpect(jsonPath("$.items[0].category").value("B2B"));
+                    .andExpect(jsonPath("$.orderItems", hasSize(1)))
+                    .andExpect(jsonPath("$.orderItems[0].category").value("B2B"));
         }
 
         @Test
@@ -383,7 +404,7 @@ public class OrderControllerIT {
         }
 
         @Test
-        @DisplayName("should return 400 when patching with empty items list")
+        @DisplayName("should return 400 when patching with empty orderItems list")
         void shouldReturn400WhenPatchingWithEmptyItems() throws Exception {
             String id = createOrder();
             PatchOrderRequest request = new PatchOrderRequest(null, List.of(), null);
@@ -396,7 +417,28 @@ public class OrderControllerIT {
         }
 
         @Test
-        @DisplayName("should return 400 when patching items on SUBMITTED order")
+        @DisplayName("should return 400 when patch request has duplicate product offering ids")
+        void shouldReturn400WhenCreateHasDuplicateProductIds() throws Exception {
+            String id = createOrder();
+
+            PatchOrderRequest invalidRequest = new PatchOrderRequest(
+                    null,
+                    List.of(
+                            new OrderItemDto(productOfferingId1, 2),
+                            new OrderItemDto(productOfferingId1, 3)
+                    ),
+                    null
+            );
+
+            mockMvc.perform(patch("/api/v1/customer-orders/{id}", id)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(invalidRequest)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.status").value(400));
+        }
+
+        @Test
+        @DisplayName("should return 400 when patching orderItems on SUBMITTED order")
         void shouldReturn400WhenPatchingItemsOnSubmittedOrder() throws Exception {
             String id = createOrder();
 
@@ -460,7 +502,7 @@ public class OrderControllerIT {
         }
 
         @Test
-        @DisplayName("should update order items on DRAFT order")
+        @DisplayName("should update order orderItems on DRAFT order")
         void shouldUpdateOrderItemsOnDraftOrder() throws Exception {
             String id = createOrder();
             PatchOrderRequest request = new PatchOrderRequest(

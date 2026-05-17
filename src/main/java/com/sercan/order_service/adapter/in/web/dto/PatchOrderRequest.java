@@ -11,7 +11,7 @@ public record PatchOrderRequest(
         OrderState status,
 
         @Valid
-        List<OrderItemDto> items,
+        List<OrderItemDto> orderItems,
 
         @Valid
         PaymentMethodDto paymentMethod

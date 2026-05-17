@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class OrderItemTest {
     @Nested
-    @DisplayName("Valid order items")
+    @DisplayName("Valid order orderItems")
     class ValidOrderItems {
 
         @Test
@@ -31,7 +31,7 @@ public class OrderItemTest {
     }
 
     @Nested
-    @DisplayName("Invalid order items")
+    @DisplayName("Invalid order orderItems")
     class InvalidOrderItems {
 
         @Test

@@ -110,11 +110,11 @@ public class OrderService implements OrderUseCase {
                 .orElseThrow(() -> new OrderNotFoundException(id.toString()));
 
         List<OrderItem> newItems = null;
-        if(request.items() != null) {
-            validateNoDuplicateProductIds(request.items());
-            validateNewProductOfferingsIds(existing, request.items());
+        if(request.orderItems() != null) {
+            validateNoDuplicateProductIds(request.orderItems());
+            validateNewProductOfferingsIds(existing, request.orderItems());
 
-            newItems = request.items().stream()
+            newItems = request.orderItems().stream()
                     .map(item -> new OrderItem(item.productOfferingId(), item.quantity()))
                     .toList();
         }

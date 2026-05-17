@@ -89,7 +89,7 @@ public class OrderTest {
         }
 
         @Test
-        @DisplayName("should update items on DRAFT order")
+        @DisplayName("should update orderItems on DRAFT order")
         void shouldUpdateItemsOnDraftOrder() {
             List<OrderItem> newItems = List.of(new OrderItem(UUID.randomUUID(), 5));
             Order result = draftOrder.patch(null, newItems, null);
@@ -115,7 +115,7 @@ public class OrderTest {
         }
 
         @Test
-        @DisplayName("should throw when patching with empty items list")
+        @DisplayName("should throw when patching with empty orderItems list")
         void shouldThrowWhenPatchingWithEmptyItems() {
             assertThatThrownBy(() -> draftOrder.patch(null, List.of(), null))
                     .isInstanceOf(InvalidOrderItemException.class)
@@ -130,7 +130,7 @@ public class OrderTest {
         }
 
         @Test
-        @DisplayName("should throw when patching items on SUBMITTED order")
+        @DisplayName("should throw when patching orderItems on SUBMITTED order")
         void shouldThrowWhenPatchingItemsOnSubmittedOrder() {
             List<OrderItem> newItems = List.of(new OrderItem(UUID.randomUUID(), 3));
             assertThatThrownBy(() -> submittedOrder.patch(null, newItems, null))

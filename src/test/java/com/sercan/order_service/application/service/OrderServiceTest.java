@@ -181,6 +181,25 @@ public class OrderServiceTest {
 
             verify(orderRepository, never()).save(any());
         }
+
+        @Test
+        @DisplayName("should throw when create request has duplicate product offering ids")
+        void shouldThrowWhenCreateHasDuplicateProductIds() {
+            CreateOrderRequest invalidRequest = new CreateOrderRequest(
+                    Category.B2B,
+                    new CustomerDto("customer-1"),
+                    new SiteDto("site-1"),
+                    List.of(
+                            new OrderItemDto(productOfferingId1, 2),
+                            new OrderItemDto(productOfferingId1, 3)
+                    ),
+                    new PaymentMethodDto(PaymentMethod.PaymentType.INVOICE, null)
+            );
+
+            assertThatThrownBy(() -> orderService.createOrder(invalidRequest, null))
+                    .isInstanceOf(InvalidOrderItemException.class)
+                    .hasMessageContaining("Duplicate product offering IDs are not allowed");
+        }
     }
 
     @Nested
@@ -277,6 +296,24 @@ public class OrderServiceTest {
         }
 
         @Test
+        @DisplayName("should throw when patch request has duplicate product offering ids")
+        void shouldThrowWhenPatchHasDuplicateProductIds() {
+            PatchOrderRequest request = new PatchOrderRequest(
+                    null,
+                    List.of(
+                            new OrderItemDto(productOfferingId1, 2),
+                            new OrderItemDto(productOfferingId1, 3)
+                    ),
+                    null
+            );
+            when(orderRepository.findById(orderId)).thenReturn(Optional.of(draftOrder));
+
+            assertThatThrownBy(() -> orderService.patchOrder(orderId, request))
+                    .isInstanceOf(InvalidOrderItemException.class)
+                    .hasMessageContaining("Duplicate product offering IDs are not allowed");
+        }
+
+        @Test
         @DisplayName("should not call catalog when all product offering ids already exist")
         void shouldNotCallCatalogWhenNoNewIds() {
             PatchOrderRequest request = new PatchOrderRequest(
@@ -313,7 +350,7 @@ public class OrderServiceTest {
         }
 
         @Test
-        @DisplayName("should throw when patching items on submitted order")
+        @DisplayName("should throw when patching orderItems on submitted order")
         void shouldThrowWhenPatchingItemsOnSubmittedOrder() {
             PatchOrderRequest request = new PatchOrderRequest(
                     null,
