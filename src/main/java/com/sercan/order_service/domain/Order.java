@@ -47,7 +47,11 @@ public record Order(
             throw new OrderNotEditableException("Only state can be modified once order is submitted");
         }
 
-        OrderState resolvedState = newState != null ? newState : state;
+        OrderState resolvedState = state;
+        if (newState != null) {
+            state.validateTransition(newState);
+            resolvedState = newState;
+        }
 
         return new Order(
                 id,

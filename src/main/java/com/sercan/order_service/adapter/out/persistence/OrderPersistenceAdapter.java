@@ -4,6 +4,7 @@ import com.sercan.order_service.application.port.out.OrderRepository;
 import com.sercan.order_service.domain.Category;
 import com.sercan.order_service.domain.Order;
 import com.sercan.order_service.domain.exception.OrderNotFoundException;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -20,6 +21,7 @@ import java.util.UUID;
 public class OrderPersistenceAdapter implements OrderRepository {
     private final OrderJpaRepository jpaRepository;
     private final OrderMapper mapper;
+    private final EntityManager entityManager;
 
     @Override
     public Order save(Order order) {
@@ -31,7 +33,9 @@ public class OrderPersistenceAdapter implements OrderRepository {
                 .map(existing -> updateEntity(existing, order))
                 .orElseThrow(() -> new OrderNotFoundException(order.id().toString()));
 
-        return mapper.toDomain(jpaRepository.save(entity));
+        OrderEntity saved = jpaRepository.saveAndFlush(entity);
+        entityManager.refresh(saved);
+        return mapper.toDomain(saved);
     }
 
     @Override
