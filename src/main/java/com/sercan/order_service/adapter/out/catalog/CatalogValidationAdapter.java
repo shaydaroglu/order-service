@@ -2,6 +2,7 @@ package com.sercan.order_service.adapter.out.catalog;
 
 import com.sercan.order_service.application.port.out.CatalogValidationPort;
 import com.sercan.order_service.domain.exception.CatalogServiceException;
+import com.sercan.order_service.domain.exception.InvalidProductOfferingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -35,7 +36,7 @@ public class CatalogValidationAdapter implements CatalogValidationPort {
                         ? response.errorBody().string()
                         : "Unknown product offerings";
                 log.warn("Product offerings not found: {}", errorBody);
-                throw new CatalogServiceException("Invalid product offerings: " + errorBody);
+                throw new InvalidProductOfferingException("Invalid product offerings: " + errorBody);
             }
 
             log.error("Catalog service returned unexpected status: {}", response.code());

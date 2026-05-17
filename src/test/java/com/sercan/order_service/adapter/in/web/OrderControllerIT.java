@@ -8,6 +8,7 @@ import com.sercan.order_service.domain.Category;
 import com.sercan.order_service.domain.OrderState;
 import com.sercan.order_service.domain.PaymentMethod;
 import com.sercan.order_service.domain.exception.CatalogServiceException;
+import com.sercan.order_service.domain.exception.InvalidProductOfferingException;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -177,6 +178,19 @@ public class OrderControllerIT {
             mockMvc.perform(post("/api/v1/customer-orders")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(invalidRequest)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.status").value(400));
+        }
+
+        @Test
+        @DisplayName("should return 400 when product offerings do not exist")
+        void shouldReturn400WhenProductOfferingsNotFound() throws Exception {
+            doThrow(new InvalidProductOfferingException("Invalid product offerings"))
+                    .when(catalogValidationPort).validateProductOfferings(any());
+
+            mockMvc.perform(post("/api/v1/customer-orders")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(validRequest)))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.status").value(400));
         }

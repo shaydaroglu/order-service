@@ -55,6 +55,8 @@ public class OrderService implements OrderUseCase {
                 .map(item -> new OrderItem(item.productOfferingId(), item.quantity()))
                 .toList();
 
+        String idempotencyToSave = StringUtils.isBlank(idempotencyKey) ? null : idempotencyKey;
+
         Order order = new Order(
                 null,
                 OrderState.DRAFT,
@@ -63,7 +65,7 @@ public class OrderService implements OrderUseCase {
                 request.site().id(),
                 orderItems,
                 paymentMethod,
-                idempotencyKey,
+                idempotencyToSave,
                 null,
                 null
         );

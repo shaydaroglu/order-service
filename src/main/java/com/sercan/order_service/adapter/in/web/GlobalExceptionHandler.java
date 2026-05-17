@@ -79,6 +79,14 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_GATEWAY, "Catalog Service Unavailable", ex.getMessage(), request);
     }
 
+    @ExceptionHandler(InvalidProductOfferingException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidProductOffering(
+            InvalidProductOfferingException ex,
+            HttpServletRequest request) {
+        log.warn("Invalid product offerings: {}", ex.getMessage());
+        return build(HttpStatus.BAD_REQUEST, "Invalid Product Offerings", ex.getMessage(), request);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(
             MethodArgumentNotValidException ex,

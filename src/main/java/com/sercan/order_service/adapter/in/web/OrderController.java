@@ -137,7 +137,6 @@ public class OrderController {
     @Operation(
             summary = "Partially update an order",
             description = """
-                    Applies a JSON Merge Patch to an existing order.
                     Fields present in the body are updated; absent fields are left unchanged.
                     
                     State transition rules:
