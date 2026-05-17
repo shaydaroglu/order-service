@@ -1,9 +1,13 @@
 package com.sercan.order_service.domain;
 
+import com.sercan.order_service.adapter.in.web.dto.OrderItemDto;
+import com.sercan.order_service.domain.exception.InvalidOrderItemException;
 import com.sercan.order_service.domain.exception.OrderNotEditableException;
 
 import java.time.OffsetDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public record Order(
@@ -47,6 +51,10 @@ public record Order(
             throw new OrderNotEditableException("Only state can be modified once order is submitted");
         }
 
+        if (newItems != null && newItems.isEmpty()) {
+            throw new InvalidOrderItemException("Order must have at least one item");
+        }
+
         OrderState resolvedState = state;
         if (newState != null) {
             state.validateTransition(newState);
@@ -65,5 +73,17 @@ public record Order(
                 createdAt,
                 null
         );
+    }
+
+    public static void validateNoDuplicateProductIds(List<OrderItemDto> items) {
+        Set<UUID> seen = new HashSet<>();
+        List<UUID> duplicates = items.stream()
+                .map(OrderItemDto::productOfferingId)
+                .filter(id -> !seen.add(id))
+                .toList();
+
+        if (!duplicates.isEmpty()) {
+            throw new InvalidOrderItemException("Duplicate product offering IDs are not allowed: " + duplicates);
+        }
     }
 }

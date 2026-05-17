@@ -22,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.sercan.order_service.domain.Order.validateNoDuplicateProductIds;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -34,6 +36,7 @@ public class OrderService implements OrderUseCase {
     public Order createOrder(CreateOrderRequest request, String idempotencyKey) {
         log.info("Creating order category={}, idempotencyKey={}",request.category(), idempotencyKey);
 
+        validateNoDuplicateProductIds(request.orderItems());
         checkIdempotency(idempotencyKey, request);
         List<UUID> productOfferingsIds = request.orderItems().stream()
                 .map(OrderItemDto::productOfferingId)
@@ -70,9 +73,17 @@ public class OrderService implements OrderUseCase {
             log.info("Order created id={}", saved.id());
             return saved;
         } catch (DataIntegrityViolationException ex) {
-            log.warn("Concurrent idempotency key conflict for key={}", idempotencyKey);
-            return orderRepository.findByIdempotencyKey(idempotencyKey)
+            log.warn("Concurrent idempotency key conflict detected for key={}", idempotencyKey);
+            Order existing = orderRepository.findByIdempotencyKey(idempotencyKey)
                     .orElseThrow(() -> new IdempotencyConflictException(idempotencyKey));
+
+            if (!isPayloadIdentical(existing, request)) {
+                log.warn("Concurrent idempotency conflict with different payload for key={}", idempotencyKey);
+                throw new IdempotencyConflictException(idempotencyKey);
+            }
+
+            log.info("Returning existing order after concurrent replay for key={}", idempotencyKey);
+            throw new IdempotencyReplayException(existing);
         }
     }
 
@@ -100,6 +111,7 @@ public class OrderService implements OrderUseCase {
 
         List<OrderItem> newItems = null;
         if(request.items() != null) {
+            validateNoDuplicateProductIds(request.items());
             validateNewProductOfferingsIds(existing, request.items());
 
             newItems = request.items().stream()

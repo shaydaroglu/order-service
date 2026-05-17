@@ -383,6 +383,19 @@ public class OrderControllerIT {
         }
 
         @Test
+        @DisplayName("should return 400 when patching with empty items list")
+        void shouldReturn400WhenPatchingWithEmptyItems() throws Exception {
+            String id = createOrder();
+            PatchOrderRequest request = new PatchOrderRequest(null, List.of(), null);
+
+            mockMvc.perform(patch("/api/v1/customer-orders/{id}", id)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.status").value(400));
+        }
+
+        @Test
         @DisplayName("should return 400 when patching items on SUBMITTED order")
         void shouldReturn400WhenPatchingItemsOnSubmittedOrder() throws Exception {
             String id = createOrder();

@@ -9,7 +9,7 @@ spring:
 
 logging:
   level:
-    com.sercan.catalog: INFO
+    com.sercan.order_service: INFO
 
 catalog:
   service:

@@ -1,5 +1,6 @@
 package com.sercan.order_service.domain;
 
+import com.sercan.order_service.domain.exception.InvalidOrderItemException;
 import com.sercan.order_service.domain.exception.InvalidStateTransitionException;
 import com.sercan.order_service.domain.exception.OrderNotEditableException;
 import org.junit.jupiter.api.BeforeEach;
@@ -111,6 +112,14 @@ public class OrderTest {
             assertThat(result.state()).isEqualTo(draftOrder.state());
             assertThat(result.orderItems()).isEqualTo(draftOrder.orderItems());
             assertThat(result.paymentMethod()).isEqualTo(draftOrder.paymentMethod());
+        }
+
+        @Test
+        @DisplayName("should throw when patching with empty items list")
+        void shouldThrowWhenPatchingWithEmptyItems() {
+            assertThatThrownBy(() -> draftOrder.patch(null, List.of(), null))
+                    .isInstanceOf(InvalidOrderItemException.class)
+                    .hasMessageContaining("Order must have at least one item");
         }
 
         @Test

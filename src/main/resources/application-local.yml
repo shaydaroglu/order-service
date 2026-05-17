@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5433/order
+    url: jdbc:postgresql://localhost:5433/orders
     username: order_user
     password: order_pass
     driver-class-name: org.postgresql.Driver
@@ -12,7 +12,7 @@ spring:
 
 logging:
   level:
-    com.sercan.catalog: DEBUG
+    com.sercan.order_service: DEBUG
 
 catalog:
   service:
